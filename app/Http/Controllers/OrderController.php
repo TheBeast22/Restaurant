@@ -62,14 +62,15 @@ class OrderController extends Controller
         if($order)
           return $this->apiResponse("redirect to update the old");
 
-        
-        $test = false;
         foreach($request->order as $name => $num)
-            if($num > 0 && isset($names[$name])){
-             if(!$test)
-              $order = Order::create(["uuid"=>Str::uuid(),"user_id" => $user->id,"restaurant_id"=>$restaurant->id,"type"=>$request->type,"status"=>$request->status]);
-             $test = OrderItem::create(["order_id" => $order->id,"restaurant_item_id" => $names[$name],"number" => $num]);}
-        return ($test)? $this->apiResponse("order added") : $this->requiredField("your order not correct");
+         if(!is_numeric($num) || $num <= 0 || !isset($names[$name]))
+            return $this->requiredField("your order not correct");
+
+         $order = Order::create(["uuid"=>Str::uuid(),"user_id" => $user->id,"restaurant_id"=>$restaurant->id,"type"=>$request->type,"status"=>$request->status]);
+
+        foreach($request->order as $name => $num)
+             OrderItem::create(["order_id" => $order->id,"restaurant_item_id" => $names[$name],"number" => $num]);
+        return $this->apiResponse("order added");
     }catch(\Exception $e){
         return $this->requiredField($e->getMessage());
     }
